@@ -9,7 +9,7 @@ const connectDB = async () => {
 
     await client.connect();
 
-    console.log("✅ MONGO DB CONNECTED SUCCESSFULLY!!", client);
+    console.log("✅ MONGO DB CONNECTED SUCCESSFULLY!!");
 
     return client.db(DB_NAME); // return DB instance if needed
   } catch (error) {
