@@ -187,13 +187,13 @@ const refreshAccessToken = asyncHandler(async (request, response, next) => {
 //for update password
 const changePassword = asyncHandler(async (request, response, next) => {
     const user = request.user;
-    const { oldPassword, newPassword } = request;
+    const { oldPassword, newPassword } = request.body;
     if (!user)
         throw new ApiError(404, "User not Logged in , please login");
     const DBUser = await User.findOne(user._id);
     if (!DBUser)
         throw new ApiError(404, "user not found in DB records");
-    const isPasswordValid = DBUser.isPasswordValid(oldPassword);
+    const isPasswordValid = DBUser.comparePasswords(oldPassword);
     if (!isPasswordValid)
         throw new ApiError(500, "invalid old password");
     DBUser.password = newPassword;
@@ -210,7 +210,7 @@ const getCurrentUser = asyncHandler(async (request, response, next) => {
     const user = request.user;
     if (!user)
         throw new ApiError(404, "User not Logged in , please login");
-    const DBUser = await findone(user._id).select("-password -refreshToke");
+    const DBUser = await User.findOne(user._id).select("-password -refreshToke");
     if (!DBUser)
         throw new ApiError(404, "user not found in DB records");
     return response.status(200).json(new ApiResponse(200, DBUser, "user details fetched successfully"));
@@ -225,7 +225,8 @@ const updateUserDetails = asyncHandler(async (request, response, next) => {
 
 //for updating avatar image
 const updateAvatarImage = asyncHandler(async (request, response, next) => {
-    const avatartImage = request.files?.avatar?.[0]?.path;
+    const avatartImage = request.file?.path;
+    console.log(request.file);
     const user = request?.user;
     if (!user)
         throw new ApiError(404, "User not logged In");
@@ -250,7 +251,7 @@ const updateAvatarImage = asyncHandler(async (request, response, next) => {
 
 //for updating coverImage
 const updateCoverImage = asyncHandler(async (request, response, next) => {
-    const coverImage = request.files?.coverImage?.[0]?.path;
+    const coverImage = request.file?.path;
     const user = request?.user
     if (!coverImage)
         throw new ApiError(404, "avatar image not found!!");

@@ -27,19 +27,19 @@ userRouter.route("/logout").post(userAuthMiddleware, logoutUser);
 userRouter.route("/refreshAccessToken").post(refreshAccessToken);
 
 //to change user current password
-userRouter.route("/logout").post(userAuthMiddleware, changePassword);
+userRouter.route("/changePassword").post(userAuthMiddleware, changePassword);
 
 //for getting current user
-userRouter.route("/logout").post(userAuthMiddleware, getCurrentUser);
+userRouter.route("/currentUser").post(userAuthMiddleware, getCurrentUser);
 
 //update current user details;
-userRouter.route("/logout").post(userAuthMiddleware, updateUserDetails);
+userRouter.route("/updateUser").post(userAuthMiddleware, updateUserDetails);
 
 //update user's avatar image;
-userRouter.route("/logout").post(userAuthMiddleware, upload.fields({ name: "avatar", maxCount: 1 }), updateAvatarImage);
+userRouter.route("/updateAvatar").post(userAuthMiddleware, upload.single("avatar"), updateAvatarImage);
 
 //update user's cover image;
-userRouter.route("/logout").post(userAuthMiddleware, upload.fields({ name: "coverImage", maxCount: 1 }), updateCoverImage);
+userRouter.route("/updateCoverImage").post(userAuthMiddleware, upload.single("coverImage"), updateCoverImage);
 
 
 export default userRouter;
