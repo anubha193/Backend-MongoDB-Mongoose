@@ -184,4 +184,102 @@ const refreshAccessToken = asyncHandler(async (request, response, next) => {
     }
 })
 
-export { registerUser, loginUser, logoutUser , refreshAccessToken};
+//for update password
+const changePassword = asyncHandler(async (request, response, next) => {
+    const user = request.user;
+    const { oldPassword, newPassword } = request;
+    if (!user)
+        throw new ApiError(404, "User not Logged in , please login");
+    const DBUser = await User.findOne(user._id);
+    if (!DBUser)
+        throw new ApiError(404, "user not found in DB records");
+    const isPasswordValid = DBUser.isPasswordValid(oldPassword);
+    if (!isPasswordValid)
+        throw new ApiError(500, "invalid old password");
+    DBUser.password = newPassword;
+    const updatedUser = await DBUser.save({ validateBeforeSave: false });
+
+    return response.status(200).json(
+        new ApiResponse(200, {}, "Password changed successfully")
+    )
+});
+
+
+//for getting current user
+const getCurrentUser = asyncHandler(async (request, response, next) => {
+    const user = request.user;
+    if (!user)
+        throw new ApiError(404, "User not Logged in , please login");
+    const DBUser = await findone(user._id).select("-password -refreshToke");
+    if (!DBUser)
+        throw new ApiError(404, "user not found in DB records");
+    return response.status(200).json(new ApiResponse(200, DBUser, "user details fetched successfully"));
+});
+
+
+//for update user details
+const updateUserDetails = asyncHandler(async (request, response, next) => {
+
+});
+
+
+//for updating avatar image
+const updateAvatarImage = asyncHandler(async (request, response, next) => {
+    const avatartImage = request.files?.avatar?.[0]?.path;
+    const user = request?.user;
+    if (!user)
+        throw new ApiError(404, "User not logged In");
+    if (!avatartImage)
+        throw new ApiError(404, "avatar image not found!!");
+    const avatarImageClodinaryPath = await uploadOnCloudinary(avatartImage);
+    if (!avatarImageClodinaryPath)
+        throw new ApiError(404, "Error while uploading image on clodinary!!");
+    User.findByIdAndUpdate(user._id, {
+        avatar: avatarImageClodinaryPath.url || ""
+    }, {
+        new: true
+    })
+    return response.status(200).json(
+        new ApiResponse(200, {
+            avatarImageClodinaryPath
+        },
+            "Image updated on Clodinary Successfully!!")
+    )
+});
+
+
+//for updating coverImage
+const updateCoverImage = asyncHandler(async (request, response, next) => {
+    const coverImage = request.files?.coverImage?.[0]?.path;
+    const user = request?.user
+    if (!coverImage)
+        throw new ApiError(404, "avatar image not found!!");
+    if (!user)
+        throw new ApiError(404, "User not logged In");
+    const coverImageClodinaryPath = await uploadOnCloudinary(coverImage);
+    if (!coverImageClodinaryPath)
+        throw new ApiError(404, "Error while uploading image on clodinary!!");
+     User.findByIdAndUpdate(user._id, {
+        avatar: coverImageClodinaryPath.url || ""
+    }, {
+        new: true
+    })
+    return response.status(200).json(
+        new ApiResponse(200, {
+            coverImageClodinaryPath
+        },
+            "Image updated on Clodinary Successfully!!")
+    )
+});
+
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    changePassword,
+    getCurrentUser,
+    updateUserDetails,
+    updateAvatarImage,
+    updateCoverImage
+};
