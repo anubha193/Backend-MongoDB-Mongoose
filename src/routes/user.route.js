@@ -8,7 +8,8 @@ import {
     getCurrentUser,
     updateUserDetails,
     updateAvatarImage,
-    updateCoverImage
+    updateCoverImage,
+    getUserChannelProfile
 } from "../controllers/user.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
 const userRouter = Router();
@@ -40,6 +41,10 @@ userRouter.route("/updateAvatar").post(userAuthMiddleware, upload.single("avatar
 
 //update user's cover image;
 userRouter.route("/updateCoverImage").post(userAuthMiddleware, upload.single("coverImage"), updateCoverImage);
+
+
+//to get user profile 
+userRouter.route("/c/:user").get(userAuthMiddleware, getUserChannelProfile)
 
 
 export default userRouter;

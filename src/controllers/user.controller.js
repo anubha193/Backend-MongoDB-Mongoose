@@ -260,7 +260,7 @@ const updateCoverImage = asyncHandler(async (request, response, next) => {
     const coverImageClodinaryPath = await uploadOnCloudinary(coverImage);
     if (!coverImageClodinaryPath)
         throw new ApiError(404, "Error while uploading image on clodinary!!");
-     User.findByIdAndUpdate(user._id, {
+    User.findByIdAndUpdate(user._id, {
         avatar: coverImageClodinaryPath.url || ""
     }, {
         new: true
@@ -273,6 +273,71 @@ const updateCoverImage = asyncHandler(async (request, response, next) => {
     )
 });
 
+const getUserChannelProfile = asyncHandler(async (request, response, next) => {
+    const { user } = request?.params;
+    console.log(user);
+    if (!user)
+        throw new ApiError(400, "User not logged in!!");
+    const cleanUser = decodeURIComponent(user).trim().toLowerCase();
+    const channel = await User.aggregate([
+        { $match: { userName: cleanUser } },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscribers"
+                },
+                channelsSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                isSubscribed: {
+                    $cond: {
+                        if: { $in: [request.user?._id, "$subscribers.subscriber"] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                fullName: 1,
+                userName: 1,
+                subscribersCount: 1,
+                channelsSubscribedToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1
+            }
+        }
+    ])
+    console.log(channel)
+    if (!channel?.length)
+        throw new ApiError(400, "User not found in DB!!");
+
+    console.log(channel[0]);
+    return response.status(200).json(
+        new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
+
+});
+
 export {
     registerUser,
     loginUser,
@@ -282,5 +347,6 @@ export {
     getCurrentUser,
     updateUserDetails,
     updateAvatarImage,
-    updateCoverImage
+    updateCoverImage,
+    getUserChannelProfile
 };
