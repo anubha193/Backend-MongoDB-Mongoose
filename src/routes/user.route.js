@@ -9,7 +9,8 @@ import {
     updateUserDetails,
     updateAvatarImage,
     updateCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
 } from "../controllers/user.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
 const userRouter = Router();
@@ -44,7 +45,10 @@ userRouter.route("/updateCoverImage").post(userAuthMiddleware, upload.single("co
 
 
 //to get user profile 
-userRouter.route("/c/:user").get(userAuthMiddleware, getUserChannelProfile)
+userRouter.route("/c/:user").get(userAuthMiddleware, getUserChannelProfile);
+
+//to get watch history
+userRouter.route("/getWatchHistory").get(userAuthMiddleware, getWatchHistory)
 
 
 export default userRouter;

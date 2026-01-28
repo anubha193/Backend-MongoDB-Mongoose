@@ -4,6 +4,7 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 import User from '../models/user.model.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import jwt from "jsonwebtoken";
+import mongoose from 'mongoose';
 
 
 //generate access and refresh token
@@ -273,6 +274,7 @@ const updateCoverImage = asyncHandler(async (request, response, next) => {
     )
 });
 
+// get any user full profile
 const getUserChannelProfile = asyncHandler(async (request, response, next) => {
     const { user } = request?.params;
     console.log(user);
@@ -338,6 +340,30 @@ const getUserChannelProfile = asyncHandler(async (request, response, next) => {
 
 });
 
+
+//watch history
+const getWatchHistory = asyncHandler(async (request, response, next) => {
+    const user = request?.user;
+    if (!user)
+        throw new ApiError(400, "user not found!!");
+    const userId = new mongoose.Types.ObjectId(user._id)
+    const watchHistory = await User.aggregate([{
+        $match: {
+            _id: userId
+        }
+    },
+    {
+     $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory"
+     }
+    }
+    ]);
+    console.log(watchHistory)
+})
+
 export {
     registerUser,
     loginUser,
@@ -348,5 +374,6 @@ export {
     updateUserDetails,
     updateAvatarImage,
     updateCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
 };
