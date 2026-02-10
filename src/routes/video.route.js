@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { publishAVideo } from "../controllers/video.controller.js";
+import { publishAVideo, publishAVideoLarger } from "../controllers/video.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
 import userAuthMiddleware from "../middleware/auth.middleware.js";
 
@@ -10,6 +10,8 @@ videoRoute.route("/uploadVideo").post(userAuthMiddleware, upload.fields([
     {name : "videoFile", maxCount: 1},
     {name : "thumbnail", maxCount: 1}
 ]) ,publishAVideo);
+
+videoRoute.route("/uploadVideoLarger").post(userAuthMiddleware, publishAVideoLarger);
 
 
 

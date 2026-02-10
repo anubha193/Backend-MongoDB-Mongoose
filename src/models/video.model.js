@@ -3,10 +3,11 @@ import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 
 const videoSchema = new mongoose.Schema({
-    owner: [{
+    owner: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
-    }],
+        ref: "User",
+        required: true
+    },
     videoFile: {
         type: String, //cloudinary url
         required: true
@@ -35,10 +36,16 @@ const videoSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    streamUrl: {
+        type: String,
+    },
+    cloudinaryPublicId: {
+        type: String,
+    },
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
 }, { timestamps: true });
 videoSchema.plugin(mongooseAggregatePaginate);
 const Video = mongoose.model("Video", videoSchema);

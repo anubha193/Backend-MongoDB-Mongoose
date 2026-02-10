@@ -11,12 +11,16 @@ app.use(express.json());
 //import routers
 import userRouter from './routes/user.route.js';
 import videoRoute from './routes/video.route.js';
+import cloudinaryRoute from './routes/cloudinary.route.js';
 
 //use routers for users
 app.use("/api/v1/users", userRouter);
 
 //use routers for videos
 app.use("/api/v1/videos", videoRoute);
+
+//import cloudinary route
+app.use("/api/v1/cloudinary", cloudinaryRoute);
 
 export { app };
 
