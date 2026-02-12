@@ -95,9 +95,142 @@ const publishAVideoLarger = asyncHandler(async (request, response, next) => {
 
 //get all videos based on query, sort, pagination
 const getAllVideos = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
-    //TODO: get all videos based on query, sort, pagination
-})
+  let { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+
+  page = Number(page);
+  limit = Number(limit);
+
+  if (Number.isNaN(page) || page < 1) page = 1;
+  if (Number.isNaN(limit) || limit < 1) limit = 10;
+
+  // Professional: enforce max limit
+  if (limit > 50) limit = 50;
+
+  // validate userId if provided
+  if (userId && !mongoose.isValidObjectId(userId)) {
+    throw new ApiError(400, "Invalid userId");
+  }
+
+  // allow only safe sort fields
+  const allowedSortFields = ["createdAt", "views", "duration", "title"];
+  if (!sortBy || !allowedSortFields.includes(sortBy)) {
+    sortBy = "createdAt";
+  }
+
+  // allow only asc/desc
+  sortType = (sortType || "desc").toLowerCase();
+  const sortOrder = sortType === "asc" ? 1 : -1;
+
+  // clean query
+  query = query?.trim();
+  if (query && query.length > 100) query = query.slice(0, 100);
+
+  // -----------------------------
+  // 2) Build match filter
+  // -----------------------------
+  const match = {
+    isPublished: true,
+  };
+
+  // filter by channel (user)
+  if (userId) {
+    match.owner = new mongoose.Types.ObjectId(userId);
+  }
+
+  // search by query
+  if (query) {
+    match.$or = [
+      { title: { $regex: query, $options: "i" } },
+      { description: { $regex: query, $options: "i" } },
+    ];
+  }
+
+  // -----------------------------
+  // 3) Aggregation pipeline
+  // -----------------------------
+  const pipeline = [
+    { $match: match },
+
+    { $sort: { [sortBy]: sortOrder } },
+
+    // Join owner details
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+        pipeline: [
+          {
+            $project: {
+              fullName: 1,
+              username: 1,
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    },
+
+    // owner array -> single object
+    {
+      $addFields: {
+        owner: { $first: "$owner" },
+      },
+    },
+
+    // Return only fields needed for feed
+    {
+      $project: {
+        videoFile: 1,
+        streamUrl: 1,
+        thumbnail: 1,
+        title: 1,
+        description: 1,
+        duration: 1,
+        views: 1,
+        isPublished: 1,
+        createdAt: 1,
+        owner: 1,
+      },
+    },
+  ];
+
+  const aggregate = Video.aggregate(pipeline);
+
+  // -----------------------------
+  // 4) Pagination using plugin
+  // -----------------------------
+  const options = {
+    page,
+    limit,
+  };
+
+  const result = await Video.aggregatePaginate(aggregate, options);
+
+  // -----------------------------
+  // 5) Response
+  // -----------------------------
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        videos: result.docs,
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          totalDocs: result.totalDocs,
+          totalPages: result.totalPages,
+          hasNextPage: result.hasNextPage,
+          hasPrevPage: result.hasPrevPage,
+          nextPage: result.nextPage,
+          prevPage: result.prevPage,
+        },
+      },
+      "Videos fetched successfully"
+    )
+  );
+});
 
 
 //get video by id
