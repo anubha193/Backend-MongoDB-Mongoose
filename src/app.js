@@ -23,8 +23,8 @@ app.use("/api/v1/videos", videoRoute);
 app.use("/api/v1/cloudinary", cloudinaryRoute);
 
 
-app.use("/api/v1/Health", ()=> {
-  return "Server is running fine";
+app.get("/api/v1/Health", (req, res) => {
+  res.send("Server is running fine");
 });
 
 export { app };
