@@ -22,5 +22,10 @@ app.use("/api/v1/videos", videoRoute);
 //import cloudinary route
 app.use("/api/v1/cloudinary", cloudinaryRoute);
 
+
+app.use("/api/v1/Health", ()=> {
+  return "Server is running fine";
+});
+
 export { app };
 
